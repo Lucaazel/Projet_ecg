@@ -1,7 +1,8 @@
 clear;
 clc;
+close all;
 %%On charge le signal cardiaque var: ecg et Fs  
-load('/data/ecg_normal_1.mat');
+load('../data/ecg_normal_3.mat');
 size_ecg = size(ecg);
 N = size_ecg(2);
 
@@ -38,12 +39,11 @@ Y_shift = decalage(2, Y_dec);
 
 %%squared:
 M=16;
-s = abs(Y_dec).^2;
+s = abs(Y_shift).^2;
 
 %%sMWI:
-sMWI = zeros(1, N);
-su = 0;
-for n=1:N
+sMWI = zeros(1, N+2);
+for n=1:N+2
     subtotal = 0;
     for i=0:M-1
         if (n-i) > 0
@@ -52,12 +52,42 @@ for n=1:N
             subtotal = 0;
         end
     end 
-    sMWI(n) = subtotal;
+    sMWI(n) = (1/M)*subtotal;
 end
-figure(1);
+
+%%Avec la m?thode du filtre au lieux de la double somme
+h = ones(1, M);
+h = 1/M*h;
+
+Y_filtre = filter(h, 1, s);
+
+seuil = max(Y_filtre)*0.7;
+
+subplot(2, 2, 1);
 plot(sMWI);
-figure(2);
+title('double somme');
+subplot(2, 2, 2);
 plot(ecg);
+title('signal');
+subplot(2, 2, 3);
+plot(abs(Y_filtre));
+title('filter()');
+
+signal_qrs = zeros(1, N);
+
+for i=1:N
+    if (Y_filtre(i) >= seuil)
+        int = [i-M, i+M];
+        break
+    end
+end
+
+figure(2);
+ecg_int = ecg(:, int(1)-20:int(2)-20)
+plot(ecg_int);
+%plot(ecg);
+
+
 
 
 
