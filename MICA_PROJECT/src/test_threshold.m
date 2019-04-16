@@ -13,6 +13,8 @@ Fs = signal.Fs; % Sampling frequency
 N = size(data,2); % Data length
 time_axis = (1:N)/Fs;
 
+stop
+
 %% Threshold method
 th = 200; % threshold
 i_seg = 10; % Segment number to plot
