@@ -65,7 +65,8 @@ Y_filtre = filter(h, 1, s);
 
 seuil = max(Y_filtre)*0.32; %we chose this threshold, arbitrarily
 
-%% we build all the intervals (where are the complexes P, Q, R and S)
+%% we build all the intervals (where are the complexes Q, R and S)
+delay = 27; %delay of all filters combined
 intervalle = [];
 i0 = 0;
 ifin = 0;
@@ -74,40 +75,20 @@ RR_indices = [];
 while (k<=N)
     k = k+1;
     if (Y_filtre(k) > seuil && i0 == 0) 
-       RR_indices = [RR_indices, k-27]; %We've noticed a delay of 27
-       i0 = k-M;
+       RR_indices = [RR_indices, k-delay]; %We've noticed a delay of 27
+       i0 = k-M-delay;
        intervalle = [intervalle, i0];
     end
     if (Y_filtre(k) > seuil && Y_filtre(k+1) < seuil)
-       ifin = k+M;
+       ifin = k+M-delay;
        i = ifin;
        intervalle = [intervalle, ifin];
        i0=0;
     end
 end
 
-%% R indices are saved: -------Useless now thanks to RR_indices
-R = [];
-size_intervalle = size(intervalle);
-indice = 0;
-for i=-1:size_intervalle(2)-3
-    debut = intervalle(i+2);
-    fin = intervalle(i+3);
-    ecg_int = ecg(:, debut-23:fin-23);
-    max_ecg_int = max(abs(ecg_int));
-    
-    indice = find(abs(ecg)==max_ecg_int);
-    R = [R, indice];
-    %bug: we take one element out of 2
-    size_R = size(R);
-    R_indice = [];
-    for k=1:size_R(2)
-        if (mod(k, 2) == 1)
-            R_indice = [R_indice, R(k)];
-        end
-    end
-    %
-end
+%% Q and S detection
+
 
 
 
