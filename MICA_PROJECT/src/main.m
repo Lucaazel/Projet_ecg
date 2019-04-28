@@ -40,7 +40,7 @@ Y_shift = shift(2, Y_dec);
 %%%plot(abs(Y_shift));
 
 %%squaring step:
-M=16;
+M=16;%average length of QRS interval (0.08 - 0.10 second)
 s = abs(Y_shift).^2;
 
 %%moving windows integration (sMWI):
@@ -67,7 +67,7 @@ seuil = max(Y_filtre)*0.32; %we chose this threshold, arbitrarily
 
 %% we build all the intervals (where are the complexes Q, R and S)
 delay = 27; %delay of all filters combined
-intervalle = [];
+interval = [];
 i0 = 0;
 ifin = 0;
 k=0;
@@ -77,19 +77,47 @@ while (k<=N)
     if (Y_filtre(k) > seuil && i0 == 0) 
        RR_indices = [RR_indices, k-delay]; %We've noticed a delay of 27
        i0 = k-M-delay;
-       intervalle = [intervalle, i0];
+       interval = [interval, i0];
     end
     if (Y_filtre(k) > seuil && Y_filtre(k+1) < seuil)
        ifin = k+M-delay;
        i = ifin;
-       intervalle = [intervalle, ifin];
+       interval = [interval, ifin];
        i0=0;
     end
 end
 
 %% Q and S detection
+size_interval = size(interval);
+n_interval = size_interval(2);
+Q_indices = [];
+S_indices = [];
+left_interval = [];
+right_interval = [];
+%Split the interval into 2 (left and right bounds)
+for i=1:n_interval
+    if (mod(i, 2) == 1)
+        left_interval = [left_interval interval(i)];
+    else
+        right_interval = [right_interval interval(i)];
+    end
+end
 
+size_RRindices = size(RR_indices);
+n_RRindices = size_RRindices(2);
 
+for i=1:n_RRindices
+    q = min(ecg(left_interval(i):RR_indices(i)));
+    s = min(ecg(RR_indices(i): right_interval(i)));
+    
+    for k=left_interval(i):right_interval(i)
+        if (ecg(k) == q)
+            Q_indices = [Q_indices k];
+        elseif (ecg(k) == s)
+            S_indices = [S_indices k];
+        end
+    end
+end
 
 
 
