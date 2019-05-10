@@ -3,13 +3,14 @@ clc;
 close all;
 %% Loading signals and freq: ecg and Fs  
 load('../data/ecg_normal_4.mat');
+ecg = [zeros(1, 100) ecg zeros(1, 100)];
 size_ecg = size(ecg);
+plot(ecg);
 N = size_ecg(2);
 
 %% On l'affiche
 t = linspace(0, 200, N);
 %figure(1);
-plot(ecg);
 
 %%Filters
 
@@ -67,7 +68,7 @@ seuil = max(Y_filtre)*0.32; %we chose this threshold, arbitrarily
 
 %% we build all the intervals (where are the complexes Q, R and S)
 delay = 27; %delay of all filters combined
-intervalle = [];
+interval = [];
 i0 = 0;
 ifin = 0;
 k=0;
@@ -77,12 +78,12 @@ while (k<=N)
     if (Y_filtre(k) > seuil && i0 == 0) 
        RR_indices = [RR_indices, k-delay]; %We've noticed a delay of 27
        i0 = k-M-delay;
-       intervalle = [intervalle, i0];
+       interval = [interval, i0];
     end
     if (Y_filtre(k) > seuil && Y_filtre(k+1) < seuil)
        ifin = k+M-delay;
        i = ifin;
-       intervalle = [intervalle, ifin];
+       interval = [interval, ifin];
        i0=0;
     end
 end
@@ -91,11 +92,85 @@ end
 size_interval = size(interval);
 n_interval = size_interval(2);
 Q_indices = [];
-S_indicies = [];
+S_indices = [];
+left_interval = [];
+right_interval = [];
+%Split the interval into 2 (left and right bounds)
 for i=1:n_interval
-    q = min(ecg(intervalle(
+    if (mod(i, 2) == 1)
+        left_interval = [left_interval interval(i)];
+    else
+        right_interval = [right_interval interval(i)];
+    end
+end
+
+size_RRindices = size(RR_indices);
+n_RRindices = size_RRindices(2);
+
+for i=1:n_RRindices
+    q = min(ecg(left_interval(i):RR_indices(i)));
+    s = min(ecg(RR_indices(i): right_interval(i)));
+    
+    for k=left_interval(i):right_interval(i)
+        if (ecg(k) == q)
+            Q_indices = [Q_indices k];
+        elseif (ecg(k) == s)
+            S_indices = [S_indices k];
+        end
+    end
+end
+
+%readjustement 
+
+for i=1:length(RR_indices)
+    if (ecg(RR_indices(i)+1) > ecg(RR_indices(i)))
+        RR_indices(i) = RR_indices(i) + 1;
+    elseif ecg(RR_indices(i)-1) > ecg(RR_indices(i))
+        RR_indices(i) = RR_indices(i) - 1;
+    end
 end
 
 
 
+%% P and T detection 
 
+% P_indices = [];
+% T_indices = [];
+% 
+% for i=1:n_RRindices 
+%     if max((ecg(left_interval(i)-35:RR_indices(i)-10))) < abs(min((ecg(left_interval(i)-35:RR_indices(i)-10))))
+%         p = min((ecg(left_interval(i)-35:RR_indices(i)-10)));
+%     else 
+%         p = max((ecg(left_interval(i)-35:RR_indices(i)-10)));
+%     end
+%     if max((ecg(RR_indices(i)+10: right_interval(i)+35))) < abs(min((ecg(RR_indices(i)+10: right_interval(i)+35))))
+%         t = min((ecg(RR_indices(i)+10: right_interval(i)+35)));
+%     else 
+%         t = max((ecg(left_interval(i)-35:RR_indices(i)-10)));
+%     end
+%     
+%     for k=left_interval(i)-35:right_interval(i)+35
+%         if ((ecg(k)) == p)
+%             P_indices = [P_indices k];
+%         elseif ((ecg(k)) == t)
+%             T_indices = [T_indices k];
+%         end
+%     end
+%     
+% end
+
+
+%% Display
+
+%Display points 
+no = 10;
+window_ecg = ecg(left_interval(no)-35:right_interval(no)+35);
+t_axis = linspace(left_interval(no)-35, right_interval(no)+35, length(window_ecg));
+%t_axis = left_interval(1):1/length(window_ecg):right_interval(1);
+figure;
+hold on;
+plot(t_axis ,window_ecg);
+for i=1:n_RRindices
+    plot(RR_indices(i), ecg(RR_indices(i)), 'x', 'color', 'red'); text(RR_indices(i), ecg(RR_indicesino)), 'R', 'color', 'red', 'Fontsize', 14);
+    plot(Q_indices(i), ecg(Q_indices(i)), 'x', 'color', 'red'); text(Q_indices(i), ecg(Q_indices(i)), 'Q', 'color', 'red', 'Fontsize', 14);
+    plot(S_indices(i), ecg(S_indices(i)), 'x', 'color', 'red'); text(S_indices(i), ecg(S_indices(i)), 'S', 'color', 'red', 'Fontsize', 14);
