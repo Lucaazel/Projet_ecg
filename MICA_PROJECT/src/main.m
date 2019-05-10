@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 %% Loading signals and freq: ecg and Fs  
-load('../data/ecg_normal_4.mat');
+load('/data/ecg_normal_2.mat');
 size_ecg = size(ecg);
 %plot(ecg);
 N = size_ecg(2);

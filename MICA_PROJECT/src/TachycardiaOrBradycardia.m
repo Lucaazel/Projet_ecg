@@ -6,13 +6,13 @@ function [ ans ] = TachycardiaOrBradycardia( R_indices, Fs)
     for i=1:N-1
         delta = delta + (1/N)*(R_indices(i+1) - R_indices(i))/Fs;
     end
-    delta
-    if (delta >= 100)
-        ans = [60/delta 1];
-    elseif (delta <= 60)
-        ans = [60/delta 0];
+    bpm = round(60/delta);
+    if (bpm >= 100)
+        ans = [bpm 1];
+    elseif (bpm <= 60)
+        ans = [bpm 0];
     else
-        ans = [60/delta 2];
+        ans = [bpm 2];
     end
 end
 
