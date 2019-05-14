@@ -12,7 +12,7 @@ for i=1:length(R_loc)-1
     end
 end
 
-seuil =mean(deltas) - 0.01*(min(deltas))
+seuil =mean(deltas) + 0.2
 
 for j=1:length(deltas)-1
     if deltas(j) >= seuil
