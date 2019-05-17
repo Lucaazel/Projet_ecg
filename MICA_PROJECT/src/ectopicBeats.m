@@ -1,4 +1,4 @@
-function [ indices, deltas ] = ectopicBeats( R_loc, Fs )
+function [ indices, s ] = ectopicBeats( R_loc, Fs )
 %Determined if the patient has ectopic beats or not
 %   return the indices of the ectopic beat(s)
 indices = [];
@@ -12,11 +12,17 @@ for i=1:length(R_loc)-1
     end
 end
 
-seuil =mean(deltas) + 0.2
+s = [];
 
 for j=1:length(deltas)-1
-    if deltas(j) >= seuil
-        indices = [indices j];
+    s = [s abs(deltas(j+1) - deltas(j))];
+end
+
+seuil =30*mean(s)
+
+for j=1:length(s)
+    if s(j) >= seuil
+        indices = [indices j+1];
     end
 end
 

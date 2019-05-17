@@ -11,8 +11,11 @@ function [ signal,time_axis, N, Fs, R_loc, Q_loc, S_loc, interval_left, interval
 
 
     %% On l'affiche
-    plot(time_axis, ecg);
-    %figure(1);
+    %plot(time_axis, ecg);
+    xlabel('t(s)');
+    ylabel('amplitude');
+    title('ecg');
+    %figure;
 
     %%Filters
 
@@ -29,10 +32,12 @@ function [ signal,time_axis, N, Fs, R_loc, Q_loc, S_loc, interval_left, interval
     X_low_pass = filter(b_low_pass, a_low_pass, ecg);
     Y = filter(b_high_pass, a_high_pass, X_low_pass);
 
+
     %%five-point differentiation filter (WARNING: Not a causal filter)
 
     b = [1 2 0 -2 -1];
     a = [ 8/Fs ];
+    %fvtool(b, a);
     Y_dec = filter(b, a, Y);
 
     
@@ -42,6 +47,7 @@ function [ signal,time_axis, N, Fs, R_loc, Q_loc, S_loc, interval_left, interval
     M=16;                       %average length of QRS interval (0.08 - 0.10 second)
     s = abs(Y_shift).^2;
 
+    
     %%moving windows integration (sMWI):
     sMWI = zeros(1, N+2);       %N+2 car il y a un d?callage a cause du filtre acausal
     for n=1:N+2
@@ -61,10 +67,15 @@ function [ signal,time_axis, N, Fs, R_loc, Q_loc, S_loc, interval_left, interval
     h = 1/M*h;
 
     Y_filtre = filter(h, 1, s);
+    
+    %figure;
+    %plot([time_axis 0 0], Y_filtre);
 
     seuil = max(Y_filtre)*0.28 %we chose this threshold, arbitrarily
-    figure;
-    plot([time_axis 0 0], Y_filtre); 
+    plot([time_axis 0 0], Y_filtre);
+    xlabel('t(s)');
+    ylabel('amplitude');
+    title('signal after MWI filter');
 
     %% we build all the intervals (where are the complexes Q, R and S)
     delay = 27;                 %delay of all filters combined
@@ -130,6 +141,7 @@ function [ signal,time_axis, N, Fs, R_loc, Q_loc, S_loc, interval_left, interval
             RR_indices(i) = RR_indices(i) - 1;
         end
     end
+    
 
     signal = ecg;
     R_loc = RR_indices;
